@@ -23,15 +23,9 @@ class Profile extends Component {
                     <ListGroupItem>
                         <Grid fluid>
                             <Row className="show-grid">
-                                <Col sm={4} md={4}>
-                                    Tweets
-                                </Col>
-                                <Col sm={4} md={4}>
-                                    Following
-                                </Col>
-                                <Col sm={4} md={4}>
-                                    Followed
-                                </Col>
+                                <Col sm={4} md={4}>Tweets<span className="badge">{this.props.user.tweets}</span></Col>
+                                <Col sm={4} md={4}>Following<span className="badge">{this.props.user.following}</span></Col>
+                                <Col sm={4} md={4}>Followers<span className="badge">{this.props.user.followers}</span></Col>
                             </Row>
                         </Grid>
                     </ListGroupItem>

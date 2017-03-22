@@ -31,7 +31,10 @@ export function fetchProfile() {
     return {
         type: 'RECEIVE_PROFILE',
         user: {
-            name: "test"
+            name: "test",
+            tweets: 1,
+            following: 1,
+            followers: 1
         }
     }
 }
