@@ -1,0 +1,14 @@
+version: '3'
+services:
+  apigateway:
+    image: twitterclone-api-gateway
+    ports:
+      - "80:8080"
+  tweetcommand:
+    image: twitterclone-tweet-command-service
+  tweetquery:
+    image: twitterclone-tweet-query-service
+  usercommand:
+    image: twitterclone-user-command-service
+  userquery:
+    image: twitterclone-user-query-service                 
