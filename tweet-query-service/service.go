@@ -29,13 +29,7 @@ func allTweets(w http.ResponseWriter, r *http.Request) {
 		Text: "test tweet 2",
 	}
 
-	tweets, err := json.Marshal([]tweet{mockedTweet1, mockedTweet2})
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	w.Write(tweets)
+	respondData(w, r, []tweet{mockedTweet1, mockedTweet2})
 }
 
 func getTweet(w http.ResponseWriter, r *http.Request) {
@@ -47,11 +41,9 @@ func getTweet(w http.ResponseWriter, r *http.Request) {
 		Text: "test tweet 1",
 	}
 
-	tweet, err := json.Marshal(mockedTweet1)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	respondData(w, r, mockedTweet1)
+}
 
-	w.Write(tweet)
+func respondData(w http.ResponseWriter, r *http.Request, data interface{}) error {
+	return json.NewEncoder(w).Encode(data)
 }
