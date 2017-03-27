@@ -8,8 +8,9 @@ import (
 
 func main() {
 	r := mux.NewRouter()
-	r.HandleFunc("/api/tweet", createTweet).Methods("POST")
-	r.HandleFunc("/api/tweet/{id}", deleteTweet).Methods("DELETE")
+	r.StrictSlash(true)
+	r.HandleFunc("/api/tweet/", createTweet).Methods("POST")
+	r.HandleFunc("/api/tweet/{id}/", deleteTweet).Methods("DELETE")
 
 	http.Handle("/", r)
 	http.ListenAndServe(":8080", nil)

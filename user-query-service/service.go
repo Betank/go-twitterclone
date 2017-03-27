@@ -14,8 +14,9 @@ type user struct {
 
 func main() {
 	r := mux.NewRouter()
-	r.HandleFunc("/api/user", getAllUsers).Methods("GET")
-	r.HandleFunc("/api/user/{id}", getUser).Methods("GET")
+	r.StrictSlash(true)
+	r.HandleFunc("/api/user/", getAllUsers).Methods("GET")
+	r.HandleFunc("/api/user/{id}/", getUser).Methods("GET")
 
 	http.Handle("/", r)
 	http.ListenAndServe(":8080", nil)

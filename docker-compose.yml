@@ -4,6 +4,11 @@ services:
     image: twitterclone-api-gateway
     ports:
       - "80:8080"
+    environment: 
+      TWEET_COMMAND_SERVICE_URL: http://tweetcommand:8080
+      TWEET_QUERY_SERVICE_URL: http://tweetquery:8080
+      USER_COMMAND_SERVICE_URL: http://usercommand:8080
+      USER_QUERY_SERVICE_URL: http://userquery:8080
   tweetcommand:
     image: twitterclone-tweet-command-service
   tweetquery:

@@ -8,7 +8,8 @@ import (
 
 func main() {
 	r := mux.NewRouter()
-	r.HandleFunc("/api/user", createUser).Methods("POST")
+	r.StrictSlash(true)
+	r.HandleFunc("/api/user/", createUser).Methods("POST")
 	r.HandleFunc("/api/user/{id}", deleteUser).Methods("DELETE")
 
 	http.Handle("/", r)
