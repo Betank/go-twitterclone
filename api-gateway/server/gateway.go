@@ -23,7 +23,7 @@ func main() {
 
 	flag.Parse()
 
-	setUpEndpoints()
+	setUpServiceURLs()
 
 	r := mux.NewRouter()
 	r.StrictSlash(true)
@@ -50,7 +50,7 @@ func proxy(URL *url.URL) http.Handler {
 	return httputil.NewSingleHostReverseProxy(URL)
 }
 
-func setUpEndpoints() {
+func setUpServiceURLs() {
 	tweetCommandServiceURL = createURL("TWEET_COMMAND_SERVICE_URL")
 	tweetQueryServiceURL = createURL("TWEET_QUERY_SERVICE_URL")
 	userCommandServiceURL = createURL("USER_COMMAND_SERVICE_URL")
