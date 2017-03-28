@@ -3,7 +3,7 @@ package main
 type tweet struct {
 	ID   string `json:"id"`
 	User user   `json:"user"`
-	Text string `json:"test"`
+	Text string `json:"text"`
 }
 
 type user struct {

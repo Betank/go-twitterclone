@@ -1,3 +1,5 @@
+import fetch from 'isomorphic-fetch'
+
 let tweetId = 0
 export const addTweet = (text) => {
     return {
@@ -15,26 +17,31 @@ export const setVisibilityFilter = (filter) => {
 }
 
 export function fetchTweets() {
-    return {
+    return dispatch => {
+        return fetch('/api/tweets')
+        .then(response => response.json())
+        .then(json => dispatch(receiveTweets(json)))
+    }
+}
+
+function receiveTweets(tweets) {
+        return {
         type: 'RECEIVE_TWEETS',
-        tweets: [{
-            id: "123AB",
-            user: {
-                name: "test"
-            },
-            text: "this is a tweet"
-        }]
+        tweets: tweets
     }
 }
 
 export function fetchProfile() {
-    return {
+    return dispatch => {
+        return fetch('/api/user')
+        .then(response => response.json())
+        .then(json => dispatch(receiveProfile(json)))
+    }
+}
+
+function receiveProfile(user) {
+        return {
         type: 'RECEIVE_PROFILE',
-        user: {
-            name: "test",
-            tweets: 1,
-            following: 1,
-            followers: 1
-        }
+        user: user
     }
 }
