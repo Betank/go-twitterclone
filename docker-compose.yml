@@ -4,16 +4,50 @@ services:
     image: twitterclone-api-gateway
     ports:
       - "80:8080"
+    depends_on:
+      - nsqd      
     environment: 
       TWEET_COMMAND_SERVICE_URL: http://tweetcommand:8080
       TWEET_QUERY_SERVICE_URL: http://tweetquery:8080
       USER_COMMAND_SERVICE_URL: http://usercommand:8080
       USER_QUERY_SERVICE_URL: http://userquery:8080
+      NSQ_ADDRESS: nsqd:4150
   tweetcommand:
     image: twitterclone-tweet-command-service
+    depends_on:
+      - nsqd
   tweetquery:
     image: twitterclone-tweet-query-service
+    depends_on:
+      - nsqd
+    environment: 
+      NSQ_ADDRESS: nsqd:4150  
   usercommand:
     image: twitterclone-user-command-service
+    depends_on:
+      - nsqd
+    environment: 
+      NSQ_ADDRESS: nsqd:4150         
   userquery:
-    image: twitterclone-user-query-service                 
+    image: twitterclone-user-query-service
+    depends_on:
+      - nsqd
+    environment: 
+      NSQ_ADDRESS: nsqd:4150        
+  nsqlookupd:
+    image: nsqio/nsq
+    command: /nsqlookupd
+    ports:
+      - "4160"
+      - "4161"
+  nsqd:
+    image: nsqio/nsq
+    command: /nsqd --lookupd-tcp-address=nsqlookupd:4160
+    ports:
+      - "4150"
+      - "4151"
+  nsqadmin:
+    image: nsqio/nsq
+    command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
+    ports:
+      - "4171:4171"

@@ -30,6 +30,7 @@ class Profile extends Component {
                         </Grid>
                     </ListGroupItem>
                 </ListGroup>
+                <input className="form-control" type="text" placeholder="Compose new tweet..."/>
             </Panel>
         )
     }
