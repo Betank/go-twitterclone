@@ -1,12 +1,26 @@
 {
-	"ImportPath": "github.com/Betank/go-twitterclone/tweet-command-service",
+	"ImportPath": "github.com/betank/go-twitterclone/tweet-command-service",
 	"GoVersion": "go1.8",
 	"GodepVersion": "v79",
 	"Deps": [
 		{
+			"ImportPath": "github.com/golang/snappy",
+			"Rev": "d9eb7a3d35ec988b8585d4a0068e462c27d28380"
+		},
+		{
+			"ImportPath": "github.com/google/uuid",
+			"Comment": "0.2-3-g6a5e285",
+			"Rev": "6a5e28554805e78ea6141142aba763936c4761c0"
+		},
+		{
 			"ImportPath": "github.com/gorilla/mux",
 			"Comment": "v1.3.0-5-g599cba5",
 			"Rev": "599cba5e7b6137d46ddf58fb1765f5d928e69604"
+		},
+		{
+			"ImportPath": "github.com/nsqio/go-nsq",
+			"Comment": "v1.0.6-10-gb9762cd",
+			"Rev": "b9762cdcb6d5cc5ac5287ca076354143d332cc97"
 		}
 	]
 }

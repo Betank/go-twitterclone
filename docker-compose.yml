@@ -16,6 +16,8 @@ services:
     image: twitterclone-tweet-command-service
     depends_on:
       - nsqd
+    environment: 
+      NSQ_ADDRESS: nsqd:4150  
   tweetquery:
     image: twitterclone-tweet-query-service
     depends_on:
