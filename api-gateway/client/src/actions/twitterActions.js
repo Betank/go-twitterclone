@@ -1,11 +1,25 @@
 import fetch from 'isomorphic-fetch'
 
-let tweetId = 0
 export const addTweet = (text) => {
-    return {
-        type: 'ADD_TWEET',
-        id: tweetId++,
-        text
+    return dispatch => {
+        dispatch({ type: 'ADD_TWEET' })
+        return fetch('/api/tweet/', {
+            method: 'POST',
+            headers: {
+                'Content-Type' : 'application/text; charset=UTF-8'
+            },
+            body: text
+        })
+        .then(res => {
+            if (res.status != 200) {
+                dispatch({ type: 'ADD_TWEET_FAILED' })
+            } else {
+                dispatch({ type: 'ADD_TWEET_SUCCESS' })
+            }
+        })
+        .catch(err => {
+            dispatch({ type: 'ADD_TWEET_FAILED' })
+        })
     }
 }
 
