@@ -1,31 +1,13 @@
 import React, {Component, PropTypes} from 'react'
 import {connect} from 'react-redux'
 import {Media, Row, Col, Grid, Panel, ListGroup, ListGroupItem} from 'react-bootstrap'
-import {fetchProfile, addTweet} from '../actions/twitterActions'
+import {fetchProfile} from '../actions/twitterActions'
+import TweetInput from './tweetInput'
 
 class Profile extends Component {
 
-    constructor(props) {
-        super(props)
-        this.state = {text: ''}
-
-        this.handleChange = this.handleChange.bind(this)
-        this.handleSubmit = this.handleSubmit.bind(this)
-    }
-
     componentDidMount() {
         this.props.dispatch(fetchProfile())
-    }
-
-    handleChange(event) {
-        this.setState({text: event.target.value})
-    }
-
-    handleSubmit(event) {
-        const text = this.state.text.trim()
-        this.props.dispatch(addTweet(text))
-        this.setState({text: ''})
-        event.preventDefault()
     }
 
     render() {
@@ -49,10 +31,7 @@ class Profile extends Component {
                         </Grid>
                     </ListGroupItem>
                 </ListGroup>
-                <form onSubmit={this.handleSubmit}>
-                    <input className="form-control" type="text" placeholder="Compose new tweet..." value={this.state.text} onChange={this.handleChange}/>
-                    <input type="submit" value="Submit" />
-                </form>
+                <TweetInput/>
             </Panel>
         )
     }
