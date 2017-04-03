@@ -22,9 +22,24 @@ function user(state = {
             return state
     }
 }
+
+function stats(state = {
+    follow: 0,
+    follower: 0,
+    tweets: 0
+}, action) {
+    switch(action.type) {
+        case 'RECEIVE_STATS':
+            return Object.assign({}, state, action.stats)
+        default:
+            return state
+    }
+}
+
 const twitterCloneApp = combineReducers({
     tweets,
-    user
+    user,
+    stats
 })
 
 export default twitterCloneApp

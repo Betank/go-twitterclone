@@ -38,6 +38,7 @@ func main() {
 
 	r.Handle("/api/user/", proxy(userQueryServiceURL)).Methods("GET")
 	r.Handle("/api/user/{id}/", proxy(userQueryServiceURL)).Methods("GET")
+	r.Handle("/api/stats/", proxy(userQueryServiceURL)).Methods("GET")
 
 	r.Handle("/", http.FileServer(http.Dir(*dir)))
 	r.PathPrefix("/dist/").Handler(http.FileServer(http.Dir(*dir)))

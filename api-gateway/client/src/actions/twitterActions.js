@@ -59,3 +59,18 @@ function receiveProfile(user) {
         user: user
     }
 }
+
+export function fetchStatistics() {
+    return dispatch => {
+        return fetch('/api/stats/')
+        .then(response => response.json())
+        .then(json => dispatch(receiveStatistics(json)))
+    }
+}
+
+function receiveStatistics(stats) {
+    return {
+        type: 'RECEIVE_STATS',
+        stats: stats
+    }
+}
