@@ -11,6 +11,7 @@ services:
       TWEET_QUERY_SERVICE_URL: http://tweetquery:8080
       USER_COMMAND_SERVICE_URL: http://usercommand:8080
       USER_QUERY_SERVICE_URL: http://userquery:8080
+      STATS_SERVICE_URL: http://statservice:8080
       NSQ_ADDRESS: nsqd:4150
   tweetcommand:
     image: twitterclone-tweet-command-service
@@ -35,7 +36,13 @@ services:
     depends_on:
       - nsqd
     environment: 
-      NSQ_ADDRESS: nsqd:4150        
+      NSQ_ADDRESS: nsqd:4150      
+  statservice:
+    image: twitterclone-stats-service
+    depends_on:
+      - nsqd
+    environment: 
+      NSQ_ADDRESS: nsqd:4150          
   nsqlookupd:
     image: nsqio/nsq
     command: /nsqlookupd

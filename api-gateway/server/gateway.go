@@ -16,6 +16,7 @@ var tweetCommandServiceURL *url.URL
 var tweetQueryServiceURL *url.URL
 var userCommandServiceURL *url.URL
 var userQueryServiceURL *url.URL
+var statServiceURL *url.URL
 
 var dir = flag.String("d", "./client/public", "client location")
 
@@ -38,7 +39,9 @@ func main() {
 
 	r.Handle("/api/user/", proxy(userQueryServiceURL)).Methods("GET")
 	r.Handle("/api/user/{id}/", proxy(userQueryServiceURL)).Methods("GET")
-	r.Handle("/api/stats/", proxy(userQueryServiceURL)).Methods("GET")
+
+	r.Handle("/api/stats/", proxy(statServiceURL)).Methods("GET")
+	r.Handle("/api/stats/{userId}", proxy(statServiceURL)).Methods("GET")
 
 	r.Handle("/", http.FileServer(http.Dir(*dir)))
 	r.PathPrefix("/dist/").Handler(http.FileServer(http.Dir(*dir)))
@@ -56,6 +59,7 @@ func setUpServiceURLs() {
 	tweetQueryServiceURL = createURL("TWEET_QUERY_SERVICE_URL")
 	userCommandServiceURL = createURL("USER_COMMAND_SERVICE_URL")
 	userQueryServiceURL = createURL("USER_QUERY_SERVICE_URL")
+	statServiceURL = createURL("STATS_SERVICE_URL")
 }
 
 func createURL(env string) *url.URL {
