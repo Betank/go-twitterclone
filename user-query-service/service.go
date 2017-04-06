@@ -23,7 +23,7 @@ func main() {
 }
 
 func getAllUsers(w http.ResponseWriter, r *http.Request) {
-	respondData(w, r, user{"ABCDE", "Test User"})
+	respondData(w, r, user{"12345", "Test User"})
 }
 
 func getUser(w http.ResponseWriter, r *http.Request) {

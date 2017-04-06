@@ -40,7 +40,7 @@ func createTweet(w http.ResponseWriter, r *http.Request) {
 	tweet := tweet{
 		ID:   id,
 		Text: string(body),
-		User: user{"Test user"},
+		User: user{Name: "Test user", ID: "12345"},
 	}
 
 	event, err := json.Marshal(tweet)
