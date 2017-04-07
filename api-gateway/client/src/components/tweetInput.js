@@ -20,7 +20,6 @@ class TweetInput extends Component {
         const text = this.state.text.trim()
         this.props.dispatch(addTweet(text))
         this.setState({text: ''})
-        event.preventDefault()
     }
 
     render() {
