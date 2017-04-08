@@ -12,6 +12,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type authHandler struct {
+	next http.Handler
+}
+
 var tweetCommandServiceURL *url.URL
 var tweetQueryServiceURL *url.URL
 var userCommandServiceURL *url.URL
@@ -28,20 +32,20 @@ func main() {
 
 	r := mux.NewRouter()
 	r.StrictSlash(true)
-	r.Handle("/api/tweet/", proxy(tweetCommandServiceURL)).Methods("POST", "DELETE")
-	r.Handle("/api/tweet/{id}/", proxy(tweetCommandServiceURL)).Methods("POST", "DELETE")
+	r.Handle("/api/tweet/", mustAuth(proxy(tweetCommandServiceURL))).Methods("POST", "DELETE")
+	r.Handle("/api/tweet/{id}/", mustAuth(proxy(tweetCommandServiceURL))).Methods("POST", "DELETE")
 
-	r.Handle("/api/tweets/", proxy(tweetQueryServiceURL)).Methods("GET")
-	r.Handle("/api/tweet/{id}/", proxy(tweetQueryServiceURL)).Methods("GET")
+	r.Handle("/api/tweets/", mustAuth(proxy(tweetQueryServiceURL))).Methods("GET")
+	r.Handle("/api/tweet/{id}/", mustAuth(proxy(tweetQueryServiceURL))).Methods("GET")
 
-	r.Handle("/api/user/", proxy(userCommandServiceURL)).Methods("POST", "DELETE")
+	r.Handle("/api/user/", mustAuth(proxy(userCommandServiceURL))).Methods("POST", "DELETE")
 	r.Handle("/api/user/{id}/", proxy(userCommandServiceURL)).Methods("POST", "DELETE")
 
-	r.Handle("/api/user/", proxy(userQueryServiceURL)).Methods("GET")
-	r.Handle("/api/user/{id}/", proxy(userQueryServiceURL)).Methods("GET")
+	r.Handle("/api/user/", mustAuth(proxy(userQueryServiceURL))).Methods("GET")
+	r.Handle("/api/user/{id}/", mustAuth(proxy(userQueryServiceURL))).Methods("GET")
 
-	r.Handle("/api/stats/", proxy(statServiceURL)).Methods("GET")
-	r.Handle("/api/stats/{userId}", proxy(statServiceURL)).Methods("GET")
+	r.Handle("/api/stats/", mustAuth(proxy(statServiceURL))).Methods("GET")
+	r.Handle("/api/stats/{userId}", mustAuth(proxy(statServiceURL))).Methods("GET")
 
 	r.Handle("/", http.FileServer(http.Dir(*dir)))
 	r.PathPrefix("/dist/").Handler(http.FileServer(http.Dir(*dir)))
@@ -69,4 +73,17 @@ func createURL(env string) *url.URL {
 	}
 
 	return url
+}
+
+func mustAuth(handler http.Handler) http.Handler {
+	return &authHandler{handler}
+}
+
+func (handler *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	header := r.Header.Get("Authorization")
+	if header == "" {
+		w.Header().Add("Authorization", "FAKETOKEN")
+	}
+
+	handler.next.ServeHTTP(w, r)
 }
