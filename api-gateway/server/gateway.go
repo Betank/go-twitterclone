@@ -9,6 +9,7 @@ import (
 
 	"net/http/httputil"
 
+	"github.com/SermoDigital/jose/jws"
 	"github.com/gorilla/mux"
 )
 
@@ -80,10 +81,30 @@ func mustAuth(handler http.Handler) http.Handler {
 }
 
 func (handler *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	header := r.Header.Get("Authorization")
-	if header == "" {
-		w.Header().Add("Authorization", "FAKETOKEN")
+	_, err := r.Cookie("jwt")
+	if err == http.ErrNoCookie {
+		jwt, err := generateJWT()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		http.SetCookie(w, &http.Cookie{Name: "jwt", Value: jwt, Path: "/"})
 	}
 
 	handler.next.ServeHTTP(w, r)
+}
+
+func generateJWT() (string, error) {
+	payload := make(jws.Claims)
+	payload.Set("userID", "12345")
+	payload.Set("userName", "Test User")
+
+	token := jws.NewJWT(payload, jws.GetSigningMethod("HS256"))
+
+	jwt, err := token.Serialize([]byte("secret"))
+	if err != nil {
+		return "", err
+	}
+
+	return string(jwt), nil
 }
