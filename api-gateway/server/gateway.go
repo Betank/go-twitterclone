@@ -48,8 +48,11 @@ func main() {
 	r.Handle("/api/stats/", mustAuth(proxy(statServiceURL))).Methods("GET")
 	r.Handle("/api/stats/{userId}", mustAuth(proxy(statServiceURL))).Methods("GET")
 
+	r.HandleFunc("/api/login", loginHandler)
+
 	r.Handle("/", http.FileServer(http.Dir(*dir)))
 	r.PathPrefix("/dist/").Handler(http.FileServer(http.Dir(*dir)))
+	r.PathPrefix("/login").Handler(http.StripPrefix("/login", http.FileServer(http.Dir(*dir))))
 
 	http.Handle("/", r)
 	http.ListenAndServe(":8080", nil)
@@ -83,15 +86,21 @@ func mustAuth(handler http.Handler) http.Handler {
 func (handler *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_, err := r.Cookie("jwt")
 	if err == http.ErrNoCookie {
-		jwt, err := generateJWT()
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		http.SetCookie(w, &http.Cookie{Name: "jwt", Value: jwt, Path: "/"})
+		w.Header().Set("Location", "/login")
+		w.WriteHeader(http.StatusTemporaryRedirect)
+		return
 	}
 
 	handler.next.ServeHTTP(w, r)
+}
+
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+	jwt, err := generateJWT()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	http.SetCookie(w, &http.Cookie{Name: "jwt", Value: jwt, Path: "/"})
 }
 
 func generateJWT() (string, error) {
