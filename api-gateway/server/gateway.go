@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"log"
 	"net/http"
@@ -52,7 +53,6 @@ func main() {
 
 	r.Handle("/", http.FileServer(http.Dir(*dir)))
 	r.PathPrefix("/dist/").Handler(http.FileServer(http.Dir(*dir)))
-	r.PathPrefix("/login").Handler(http.StripPrefix("/login", http.FileServer(http.Dir(*dir))))
 
 	http.Handle("/", r)
 	http.ListenAndServe(":8080", nil)
@@ -84,10 +84,9 @@ func mustAuth(handler http.Handler) http.Handler {
 }
 
 func (handler *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	_, err := r.Cookie("jwt")
-	if err == http.ErrNoCookie {
-		w.Header().Set("Location", "/login")
-		w.WriteHeader(http.StatusTemporaryRedirect)
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
@@ -100,7 +99,12 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	http.SetCookie(w, &http.Cookie{Name: "jwt", Value: jwt, Path: "/"})
+
+	token := &struct {
+		Token string `json:"token"`
+	}{jwt}
+
+	respondData(w, r, token)
 }
 
 func generateJWT() (string, error) {
@@ -116,4 +120,8 @@ func generateJWT() (string, error) {
 	}
 
 	return string(jwt), nil
+}
+
+func respondData(w http.ResponseWriter, r *http.Request, data interface{}) error {
+	return json.NewEncoder(w).Encode(data)
 }
