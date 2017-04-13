@@ -6,10 +6,7 @@ import {
 function tweets(state = [], action) {
     switch (action.type) {
         case RECEIVE_TWEETS:
-            return [
-                ...state,
-                ...action.tweets
-            ]
+            return Object.assign([], state, action.tweets)
         default:
             return state
     }
