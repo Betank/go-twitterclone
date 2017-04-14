@@ -10,10 +10,21 @@ import (
 
 	"encoding/json"
 
+	"context"
+
+	"github.com/SermoDigital/jose/jws"
+	"github.com/SermoDigital/jose/jwt"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	nsq "github.com/nsqio/go-nsq"
 )
+
+type authHandler struct {
+	next http.Handler
+}
+
+type tweetCreateHandler struct{}
+type tweetDeleteHandler struct{}
 
 var producer *nsq.Producer
 
@@ -22,14 +33,14 @@ func main() {
 
 	r := mux.NewRouter()
 	r.StrictSlash(true)
-	r.HandleFunc("/api/tweet/", createTweet).Methods("POST")
-	r.HandleFunc("/api/tweet/{id}/", deleteTweet).Methods("DELETE")
+	r.Handle("/api/tweet/", mustAuth(&tweetCreateHandler{})).Methods("POST")
+	r.Handle("/api/tweet/{id}/", mustAuth(&tweetDeleteHandler{})).Methods("DELETE")
 
 	http.Handle("/", r)
 	http.ListenAndServe(":8080", nil)
 }
 
-func createTweet(w http.ResponseWriter, r *http.Request) {
+func (handler *tweetCreateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -40,7 +51,7 @@ func createTweet(w http.ResponseWriter, r *http.Request) {
 	tweet := tweet{
 		ID:   id,
 		Text: string(body),
-		User: user{Name: "Test user", ID: "12345"},
+		User: r.Context().Value("user").(user),
 	}
 
 	event, err := json.Marshal(tweet)
@@ -56,8 +67,30 @@ func createTweet(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func deleteTweet(w http.ResponseWriter, r *http.Request) {
+func (handler *tweetDeleteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
+}
+
+func mustAuth(handler http.Handler) http.Handler {
+	return &authHandler{handler}
+}
+
+func (auth *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	jwt, err := jws.ParseJWTFromRequest(r)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	ctx := context.WithValue(r.Context(), "user", getUserFromJWT(jwt))
+
+	auth.next.ServeHTTP(w, r.WithContext(ctx))
+}
+
+func getUserFromJWT(jwt jwt.JWT) user {
+	return user{
+		jwt.Claims().Get("userName").(string),
+		jwt.Claims().Get("userID").(string),
+	}
 }
 
 func setupNSQProducer() {
