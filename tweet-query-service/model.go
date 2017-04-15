@@ -8,4 +8,5 @@ type tweet struct {
 
 type user struct {
 	Name string `json:"name"`
+	ID   string `json:"id"`
 }

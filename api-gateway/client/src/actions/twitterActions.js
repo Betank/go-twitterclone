@@ -51,7 +51,7 @@ export function fetchTweets() {
 
 
     return dispatch => {
-        return fetch('/api/tweets', { headers: {Authorization: `Bearer ${token}`}})
+        return fetch('/api/tweets/user/', { headers: {Authorization: `Bearer ${token}`}})
         .then(response => response.json())
         .then(json => dispatch(receiveTweets(json)))
     }
@@ -71,7 +71,7 @@ export function fetchProfile() {
     }
 
     return dispatch => {
-        return fetch('/api/user', { headers: {Authorization: `Bearer ${token}`}})
+        return fetch('/api/user/', { headers: {Authorization: `Bearer ${token}`}})
         .then(response => response.json())
         .then(json => dispatch(receiveProfile(json)))
     }
@@ -141,7 +141,7 @@ export function loginUser(creds) {
     return dispatch => {
         dispatch(requestLogin(creds))
 
-        return fetch('/api/login', config)
+        return fetch('/api/login/', config)
             .then(response => response.json().then(user => ({user, response})))
             .then(({user, response}) => {
                 if (!response.ok) {

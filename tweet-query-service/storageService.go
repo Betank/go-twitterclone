@@ -4,6 +4,7 @@ import "sync"
 
 type Storage interface {
 	GetTweetById(id string) tweet
+	GetTweetsByUserId(id string) []tweet
 	GetAllTweets() []tweet
 	CreateTweet(tweet tweet)
 	DeleteTweet(id string)
@@ -19,6 +20,20 @@ func (store *simpleStore) GetTweetById(id string) tweet {
 	defer store.Unlock()
 	tweet := store.tweetStorage[id]
 	return tweet
+}
+
+func (store *simpleStore) GetTweetsByUserId(id string) []tweet {
+	store.Lock()
+	defer store.Unlock()
+
+	tweets := make([]tweet, 0)
+	for _, v := range store.tweetStorage {
+		if v.User.ID == id {
+			tweets = append(tweets, v)
+		}
+	}
+
+	return tweets
 }
 
 func (store *simpleStore) GetAllTweets() []tweet {

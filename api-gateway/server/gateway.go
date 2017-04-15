@@ -39,6 +39,7 @@ func main() {
 
 	r.Handle("/api/tweets/", mustAuth(proxy(tweetQueryServiceURL))).Methods("GET")
 	r.Handle("/api/tweet/{id}/", mustAuth(proxy(tweetQueryServiceURL))).Methods("GET")
+	r.Handle("/api/tweets/user/", mustAuth(proxy(tweetQueryServiceURL))).Methods("GET")
 
 	r.Handle("/api/user/", mustAuth(proxy(userCommandServiceURL))).Methods("POST", "DELETE")
 	r.Handle("/api/user/{id}/", proxy(userCommandServiceURL)).Methods("POST", "DELETE")
