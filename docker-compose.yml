@@ -12,6 +12,7 @@ services:
       USER_COMMAND_SERVICE_URL: http://usercommand:8080
       USER_QUERY_SERVICE_URL: http://userquery:8080
       STATS_SERVICE_URL: http://statservice:8080
+      AUTH_SERVICE_URL: http://authservice:8080
       NSQ_ADDRESS: nsqd:4150
   tweetcommand:
     image: twitterclone-tweet-command-service
@@ -42,7 +43,9 @@ services:
     depends_on:
       - nsqd
     environment: 
-      NSQ_ADDRESS: nsqd:4150          
+      NSQ_ADDRESS: nsqd:4150
+  authservice:
+    image: twitterclone-authentication-service        
   nsqlookupd:
     image: nsqio/nsq
     command: /nsqlookupd

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"log"
 	"net/http"
@@ -10,7 +9,6 @@ import (
 
 	"net/http/httputil"
 
-	"github.com/SermoDigital/jose/jws"
 	"github.com/gorilla/mux"
 )
 
@@ -23,6 +21,7 @@ var tweetQueryServiceURL *url.URL
 var userCommandServiceURL *url.URL
 var userQueryServiceURL *url.URL
 var statServiceURL *url.URL
+var authServiceURL *url.URL
 
 var dir = flag.String("d", "./client/public", "client location")
 
@@ -50,7 +49,7 @@ func main() {
 	r.Handle("/api/stats/", mustAuth(proxy(statServiceURL))).Methods("GET")
 	r.Handle("/api/stats/{userId}", mustAuth(proxy(statServiceURL))).Methods("GET")
 
-	r.HandleFunc("/api/login", loginHandler)
+	r.Handle("/api/login/", proxy(authServiceURL)).Methods("POST")
 
 	r.Handle("/", http.FileServer(http.Dir(*dir)))
 	r.PathPrefix("/dist/").Handler(http.FileServer(http.Dir(*dir)))
@@ -69,6 +68,7 @@ func setUpServiceURLs() {
 	userCommandServiceURL = createURL("USER_COMMAND_SERVICE_URL")
 	userQueryServiceURL = createURL("USER_QUERY_SERVICE_URL")
 	statServiceURL = createURL("STATS_SERVICE_URL")
+	authServiceURL = createURL("AUTH_SERVICE_URL")
 }
 
 func createURL(env string) *url.URL {
@@ -92,37 +92,4 @@ func (handler *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	handler.next.ServeHTTP(w, r)
-}
-
-func loginHandler(w http.ResponseWriter, r *http.Request) {
-	jwt, err := generateJWT()
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	token := &struct {
-		Token string `json:"token"`
-	}{jwt}
-
-	respondData(w, r, token)
-}
-
-func generateJWT() (string, error) {
-	payload := make(jws.Claims)
-	payload.Set("userID", "12345")
-	payload.Set("userName", "Test User")
-
-	token := jws.NewJWT(payload, jws.GetSigningMethod("HS256"))
-
-	jwt, err := token.Serialize([]byte("secret"))
-	if err != nil {
-		return "", err
-	}
-
-	return string(jwt), nil
-}
-
-func respondData(w http.ResponseWriter, r *http.Request, data interface{}) error {
-	return json.NewEncoder(w).Encode(data)
 }

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for d in tweet-command-service tweet-query-service user-command-service user-query-service stats-service; do
+for d in tweet-command-service tweet-query-service user-command-service user-query-service stats-service authentication-service; do
     cd $d
 
     echo -n "Building $d"
