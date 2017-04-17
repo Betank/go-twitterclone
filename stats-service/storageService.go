@@ -5,7 +5,8 @@ import "sync"
 type Storage interface {
 	CreateNewEntry(id string)
 	GetStatsByUserID(id string) stats
-	UpdateTweetCount(id string)
+	AddTweet(id string)
+	RemoveTweet(id string)
 	UpdateFollowCount(id string)
 	UpdateFollowerCount(id string)
 	RemoveStats(id string)
@@ -29,10 +30,18 @@ func (store *simpleStore) GetStatsByUserID(id string) stats {
 	return *stats
 }
 
-func (store *simpleStore) UpdateTweetCount(id string) {
+func (store *simpleStore) AddTweet(id string) {
 	store.Lock()
 	defer store.Unlock()
 	store.statStore[id].Tweets++
+}
+
+func (store *simpleStore) RemoveTweet(id string) {
+	store.Lock()
+	defer store.Unlock()
+	if store.statStore[id].Tweets > 0 {
+		store.statStore[id].Tweets--
+	}
 }
 
 func (store *simpleStore) UpdateFollowCount(id string) {

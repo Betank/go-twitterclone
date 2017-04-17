@@ -21,11 +21,13 @@ type stats struct {
 }
 
 var store Storage
-var createTweetConsumer *nsq.Consumer
+var createTweetConsumer, deleteTweetConsumer *nsq.Consumer
+var nsqAddress string
+var config *nsq.Config
 
 func main() {
 	store = simpleStoreMockUp()
-	setupNSQConsumerHandler()
+	setupNSQ()
 
 	router := mux.NewRouter()
 	router.StrictSlash(true)
@@ -48,36 +50,61 @@ func respondData(w http.ResponseWriter, r *http.Request, data interface{}) error
 	return json.NewEncoder(w).Encode(data)
 }
 
-func setupNSQConsumerHandler() {
-	nsqAddress := os.Getenv("NSQ_ADDRESS")
+func setupNSQ() {
+	nsqAddress = os.Getenv("NSQ_ADDRESS")
 	if nsqAddress == "" {
 		log.Fatal("nsq address not set")
 	}
 
-	config := nsq.NewConfig()
+	config = nsq.NewConfig()
 
-	var err error
-	createTweetConsumer, err = nsq.NewConsumer("create_tweet", "stats", config)
+	createTweetConsumer = setupNSQConsumerHandler("create_tweet", updateTweetCount)
+	deleteTweetConsumer = setupNSQConsumerHandler("delete_tweet", reduceTweetCount)
+}
+
+func setupNSQConsumerHandler(topic string, handler func(message *nsq.Message) error) *nsq.Consumer {
+	consumer, err := nsq.NewConsumer(topic, "stats", config)
 	if err != nil {
 		log.Fatal("error while creating producer")
 	}
-	createTweetConsumer.AddHandler(nsq.HandlerFunc(updateTweetCount))
+	consumer.AddHandler(nsq.HandlerFunc(handler))
 
-	err = createTweetConsumer.ConnectToNSQD(nsqAddress)
+	err = consumer.ConnectToNSQD(nsqAddress)
 	if err != nil {
 		log.Fatal("Could not connect to nsq")
 	}
+
+	return consumer
 }
 
 func updateTweetCount(message *nsq.Message) error {
+	user, err := getUserFromMessage(message)
+	if err != nil {
+		log.Println("error while recieving message ", err.Error())
+		return err
+	}
+	store.AddTweet(user.ID)
+	return nil
+}
+
+func reduceTweetCount(message *nsq.Message) error {
+	user, err := getUserFromMessage(message)
+	if err != nil {
+		log.Println("error while recieving message ", err.Error())
+		return err
+	}
+	store.RemoveTweet(user.ID)
+	return nil
+}
+
+func getUserFromMessage(message *nsq.Message) (user, error) {
 	content := &struct {
 		User user `json:"user"`
 	}{}
 	err := json.Unmarshal(message.Body, content)
 	if err != nil {
-		log.Println("error while recieving message ", err.Error())
-		return err
+		return user{}, err
 	}
-	store.UpdateTweetCount(content.User.ID)
-	return nil
+
+	return content.User, nil
 }

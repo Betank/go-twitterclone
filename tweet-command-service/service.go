@@ -65,10 +65,28 @@ func (handler *tweetCreateHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	w.Write([]byte(id))
 }
 
 func (handler *tweetDeleteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
+	id := mux.Vars(r)["id"]
+	tweet := tweet{
+		ID:   id,
+		User: r.Context().Value("user").(user),
+	}
+
+	event, err := json.Marshal(tweet)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = producer.Publish("delete_tweet", event)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 func mustAuth(handler http.Handler) http.Handler {
