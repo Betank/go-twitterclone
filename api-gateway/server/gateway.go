@@ -50,6 +50,7 @@ func main() {
 	r.Handle("/api/stats/{userId}", mustAuth(proxy(statServiceURL))).Methods("GET")
 
 	r.Handle("/api/login/", proxy(authServiceURL)).Methods("POST")
+	r.Handle("/api/register/", proxy(authServiceURL)).Methods("POST")
 
 	r.Handle("/", http.FileServer(http.Dir(*dir)))
 	r.PathPrefix("/dist/").Handler(http.FileServer(http.Dir(*dir)))
