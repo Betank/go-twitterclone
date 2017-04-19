@@ -6,6 +6,8 @@ import (
 
 	"io/ioutil"
 
+	"errors"
+
 	"github.com/SermoDigital/jose/jws"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
@@ -31,7 +33,19 @@ func main() {
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
-	jwt, err := generateJWT()
+	username, password, err := parseRequest(r)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	user, err := checkCredentials(username, password)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	jwt, err := generateJWT(user)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -40,6 +54,28 @@ func login(w http.ResponseWriter, r *http.Request) {
 	token := &tokenResponse{jwt}
 
 	respondData(w, r, token)
+}
+
+func parseRequest(r *http.Request) (string, string, error) {
+	err := r.ParseForm()
+	if err != nil {
+		return "", "", err
+	}
+	username := r.FormValue("username")
+	password := r.FormValue("password")
+
+	return username, password, nil
+}
+
+func checkCredentials(username, password string) (User, error) {
+	user, err := storage.GetUserByName(username)
+	if err != nil {
+		return User{}, err
+	}
+	if user.Password != password {
+		return User{}, errors.New("wrong password")
+	}
+	return user, nil
 }
 
 func register(w http.ResponseWriter, r *http.Request) {
@@ -64,10 +100,10 @@ func register(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func generateJWT() (string, error) {
+func generateJWT(user User) (string, error) {
 	payload := make(jws.Claims)
-	payload.Set("userID", "12345")
-	payload.Set("userName", "Test User")
+	payload.Set("userID", user.ID)
+	payload.Set("userName", user.Name)
 
 	token := jws.NewJWT(payload, jws.GetSigningMethod("HS256"))
 
