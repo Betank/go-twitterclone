@@ -3,29 +3,11 @@ import {connect} from 'react-redux'
 import {Grid, Row, Col} from 'react-bootstrap'
 import TweetList from './components/tweetList'
 import Profile from './components/profile'
-import AppNavbar from './components/navbar'
-import {loginUser} from './actions/twitterActions'
-import Login from './components/pages/login'
 
 class App extends Component {
     render() {
-        const {dispatch, isAuthenticated, errorMessage} = this.props
         return (
             <div>
-                <AppNavbar dispatch={dispatch} isAuthenticated={isAuthenticated} errorMessage={errorMessage}/>
-                {!isAuthenticated &&
-                <div className="container">
-                    <div className="wrapper">
-                        <form name="Login_Form" className="form-signin">
-                            <Login
-                                errorMessage={errorMessage}
-                                onLoginClick={ creds => dispatch(loginUser(creds)) }
-                            />
-                        </form>
-                    </div>
-                </div>
-                }
-                { isAuthenticated &&
                 <Grid fluid>
                     <Row className="show-grid">
                         <Col sm={3} md={2}>
@@ -36,7 +18,6 @@ class App extends Component {
                         </Col>
                     </Row>
                 </Grid>
-                }
             </div>
         );
     }
