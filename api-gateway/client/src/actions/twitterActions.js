@@ -11,6 +11,9 @@ export const LOGIN_REQUEST = 'LOGIN_REQUEST'
 export const LOGIN_SUCCESS = 'LOGIN_SUCCESS'
 export const LOGIN_FAILURE = 'LOGIN_FAILURE'
 
+export const REGISTRATION_FAILURE = 'REGISTRATION_FAILURE'
+export const REGISTRATION_REQUEST = 'REGISTRATION_REQUEST'
+
 export const LOGOUT_REQUEST = 'LOGOUT_REQUEST'
 export const LOGOUT_SUCCESS = 'LOGOUT_SUCCESS'
 
@@ -21,25 +24,25 @@ export const addTweet = (text) => {
     }
 
     return dispatch => {
-        dispatch({ type: ADD_TWEET })
+        dispatch({type: ADD_TWEET})
         return fetch('/api/tweet/', {
             method: 'POST',
             headers: {
-                'Content-Type' : 'application/text; charset=UTF-8',
+                'Content-Type': 'application/text; charset=UTF-8',
                 Authorization: `Bearer ${token}`
             },
             body: text
         })
-        .then(res => {
-            if (res.status != 200) {
-                dispatch({ type: ADD_TWEET_FAILED })
-            } else {
-                dispatch({ type: ADD_TWEET_SUCCESS })
-            }
-        })
-        .catch(err => {
-            dispatch({ type: ADD_TWEET_FAILED })
-        })
+            .then(res => {
+                if (res.status != 200) {
+                    dispatch({type: ADD_TWEET_FAILED})
+                } else {
+                    dispatch({type: ADD_TWEET_SUCCESS})
+                }
+            })
+            .catch(err => {
+                dispatch({type: ADD_TWEET_FAILED})
+            })
     }
 }
 
@@ -51,14 +54,14 @@ export function fetchTweets() {
 
 
     return dispatch => {
-        return fetch('/api/tweets/user/', { headers: {Authorization: `Bearer ${token}`}})
-        .then(response => response.json())
-        .then(json => dispatch(receiveTweets(json)))
+        return fetch('/api/tweets/user/', {headers: {Authorization: `Bearer ${token}`}})
+            .then(response => response.json())
+            .then(json => dispatch(receiveTweets(json)))
     }
 }
 
 function receiveTweets(tweets) {
-        return {
+    return {
         type: RECEIVE_TWEETS,
         tweets: tweets
     }
@@ -71,14 +74,14 @@ export function fetchProfile() {
     }
 
     return dispatch => {
-        return fetch('/api/user/', { headers: {Authorization: `Bearer ${token}`}})
-        .then(response => response.json())
-        .then(json => dispatch(receiveProfile(json)))
+        return fetch('/api/user/', {headers: {Authorization: `Bearer ${token}`}})
+            .then(response => response.json())
+            .then(json => dispatch(receiveProfile(json)))
     }
 }
 
 function receiveProfile(user) {
-        return {
+    return {
         type: RECEIVE_PROFILE,
         user: user
     }
@@ -91,9 +94,9 @@ export function fetchStatistics() {
     }
 
     return dispatch => {
-        return fetch('/api/stats/', { headers: {Authorization: `Bearer ${token}`}})
-        .then(response => response.json())
-        .then(json => dispatch(receiveStatistics(json)))
+        return fetch('/api/stats/', {headers: {Authorization: `Bearer ${token}`}})
+            .then(response => response.json())
+            .then(json => dispatch(receiveStatistics(json)))
     }
 }
 
@@ -134,7 +137,7 @@ function loginError(message) {
 export function loginUser(creds) {
     let config = {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded'},
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: `username=${creds.username}&password=${creds.password}`
     }
 
@@ -155,6 +158,7 @@ export function loginUser(creds) {
             .catch(err => console.log('Error: ', err))
     }
 }
+
 
 function requestLogout() {
     return {
@@ -177,5 +181,42 @@ export function logoutUser() {
         dispatch(requestLogout())
         localStorage.removeItem('id_token')
         dispatch(receiveLogout())
+    }
+}
+
+export function register(creds) {
+    let config = {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: `{"username":"${creds.username}", "password":"${creds.password}"}`
+    }
+
+    return dispatch => {
+        dispatch(requestRegister(creds))
+        return fetch('/api/register/', config)
+            .then(response => {
+                if (!response.ok) {
+                    dispatch(registerError())
+                    return Promise.reject()
+                } else {
+                    dispatch(loginUser(creds))
+                }
+            })
+            .catch(err => console.log('Error: ', err))
+    }
+}
+
+
+function registerError() {
+    return {
+        type: REGISTRATION_FAILURE,
+        isFetching: false,
+    }
+}
+
+function requestRegister() {
+    return {
+        type: REGISTRATION_REQUEST,
+        isFetching: true,
     }
 }

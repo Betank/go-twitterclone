@@ -4,7 +4,7 @@ import "sync"
 import "errors"
 
 type User struct {
-	Name     string `json:"name"`
+	Name     string `json:"username"`
 	ID       string `json:"id"`
 	Password string `json:"password"`
 }

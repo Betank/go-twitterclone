@@ -1,4 +1,5 @@
 import React, {Component, PropTypes} from 'react'
+import {Redirect} from 'react-router-dom'
 
 class Register extends Component {
 
@@ -11,7 +12,7 @@ class Register extends Component {
     }
 
     render() {
-        const {errorMessage} = this.props
+        const {errorMessage, isAuthenticated} = this.props
         return (
             <div className="container">
                 <div className="wrapper">
@@ -31,14 +32,18 @@ class Register extends Component {
                         </div>
                     </form>
                 </div>
+                {isAuthenticated &&
+                <Redirect to="/"/>
+                }
             </div>
         )
     }
 }
 
 Register.propTypes = {
-    onRegistrationClick: PropTypes.func,
-    errorMessage: PropTypes.string
+    onRegistrationClick: PropTypes.func.isRequired,
+    errorMessage: PropTypes.string,
+    isAuthenticated: PropTypes.bool.isRequired
 }
 
-export default Register
+export default Register;

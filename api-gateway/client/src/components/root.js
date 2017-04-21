@@ -4,7 +4,7 @@ import App from './../App';
 import Register from './pages/register'
 import AppNavbar from './navbar'
 import Login from './pages/login'
-import {loginUser} from '../actions/twitterActions'
+import {loginUser, register} from '../actions/twitterActions'
 import {connect} from 'react-redux'
 
 class Root extends Component {
@@ -15,7 +15,9 @@ class Root extends Component {
                 <AppNavbar dispatch={dispatch} isAuthenticated={isAuthenticated}/>
                 <HashRouter>
                     <div>
-                        <Route path="/register" component={Register}/>
+                        <Route path="/register" render={(props) => (
+                            <Register isAuthenticated={isAuthenticated} onRegistrationClick={ creds => dispatch(register(creds))}/>
+                        )}/>
                         <Route path="/login" render={(props) => (
                             <Login isAuthenticated={isAuthenticated} errorMessage={errorMessage} onLoginClick={ creds => dispatch(loginUser(creds))}/>
                         )}/>
