@@ -1,61 +1,55 @@
 package main
 
-import "sync"
+import (
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
+)
 
 type Storage interface {
 	GetTweetById(id string) tweet
 	GetTweetsByUserId(id string) []tweet
-	GetAllTweets() []tweet
 	CreateTweet(tweet tweet)
 	DeleteTweet(id string)
 }
 
-type simpleStore struct {
-	sync.Mutex
-	tweetStorage map[string]tweet
+type mongoStorage struct {
+	session *mgo.Session
 }
 
-func (store *simpleStore) GetTweetById(id string) tweet {
-	store.Lock()
-	defer store.Unlock()
-	tweet := store.tweetStorage[id]
+func NewMongoStorage() *mongoStorage {
+	session, err := mgo.Dial("mongo")
+	if err != nil {
+
+	}
+	return &mongoStorage{session}
+}
+
+func (store *mongoStorage) CreateTweet(tweet tweet) {
+	sessionCopy := store.session.Copy()
+	defer sessionCopy.Close()
+	sessionCopy.DB("gotwitterclone").C("tweets").Insert(&tweet)
+}
+
+func (store *mongoStorage) DeleteTweet(id string) {
+	sessionCopy := store.session.Copy()
+	defer sessionCopy.Close()
+	sessionCopy.DB("gotwitterclone").C("tweets").Remove(bson.M{"id": id})
+}
+
+func (store *mongoStorage) GetTweetById(id string) tweet {
+	sessionCopy := store.session.Copy()
+	defer sessionCopy.Close()
+
+	tweet := tweet{}
+	sessionCopy.DB("gotwitterclone").C("tweets").Find(bson.M{"id": id}).One(&tweet)
 	return tweet
 }
 
-func (store *simpleStore) GetTweetsByUserId(id string) []tweet {
-	store.Lock()
-	defer store.Unlock()
+func (store *mongoStorage) GetTweetsByUserId(id string) []tweet {
+	sessionCopy := store.session.Copy()
+	defer sessionCopy.Close()
 
-	tweets := make([]tweet, 0)
-	for _, v := range store.tweetStorage {
-		if v.User.ID == id {
-			tweets = append(tweets, v)
-		}
-	}
-
+	var tweets []tweet
+	sessionCopy.DB("gotwitterclone").C("tweets").Find(bson.M{"user.id": id}).All(&tweets)
 	return tweets
-}
-
-func (store *simpleStore) GetAllTweets() []tweet {
-	store.Lock()
-	defer store.Unlock()
-	tweets := make([]tweet, 0)
-
-	for _, v := range store.tweetStorage {
-		tweets = append(tweets, v)
-	}
-
-	return tweets
-}
-
-func (store *simpleStore) CreateTweet(tweet tweet) {
-	store.Lock()
-	defer store.Unlock()
-	store.tweetStorage[tweet.ID] = tweet
-}
-
-func (store *simpleStore) DeleteTweet(id string) {
-	store.Lock()
-	defer store.Unlock()
-	delete(store.tweetStorage, id)
 }

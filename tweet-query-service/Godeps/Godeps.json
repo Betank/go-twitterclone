@@ -4,6 +4,26 @@
 	"GodepVersion": "v79",
 	"Deps": [
 		{
+			"ImportPath": "github.com/SermoDigital/jose",
+			"Comment": "1.1-1-g2bd9b81",
+			"Rev": "2bd9b81ac51d6d6134fcd4fd846bd2e7347a15f9"
+		},
+		{
+			"ImportPath": "github.com/SermoDigital/jose/crypto",
+			"Comment": "1.1-1-g2bd9b81",
+			"Rev": "2bd9b81ac51d6d6134fcd4fd846bd2e7347a15f9"
+		},
+		{
+			"ImportPath": "github.com/SermoDigital/jose/jws",
+			"Comment": "1.1-1-g2bd9b81",
+			"Rev": "2bd9b81ac51d6d6134fcd4fd846bd2e7347a15f9"
+		},
+		{
+			"ImportPath": "github.com/SermoDigital/jose/jwt",
+			"Comment": "1.1-1-g2bd9b81",
+			"Rev": "2bd9b81ac51d6d6134fcd4fd846bd2e7347a15f9"
+		},
+		{
 			"ImportPath": "github.com/golang/snappy",
 			"Rev": "d9eb7a3d35ec988b8585d4a0068e462c27d28380"
 		},
@@ -16,6 +36,31 @@
 			"ImportPath": "github.com/nsqio/go-nsq",
 			"Comment": "v1.0.6-10-gb9762cd",
 			"Rev": "b9762cdcb6d5cc5ac5287ca076354143d332cc97"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2",
+			"Comment": "r2016.08.01-5-g3f83fa5",
+			"Rev": "3f83fa5005286a7fe593b055f0d7771a7dce4655"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2/bson",
+			"Comment": "r2016.08.01-5-g3f83fa5",
+			"Rev": "3f83fa5005286a7fe593b055f0d7771a7dce4655"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2/internal/json",
+			"Comment": "r2016.08.01-5-g3f83fa5",
+			"Rev": "3f83fa5005286a7fe593b055f0d7771a7dce4655"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2/internal/sasl",
+			"Comment": "r2016.08.01-5-g3f83fa5",
+			"Rev": "3f83fa5005286a7fe593b055f0d7771a7dce4655"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2/internal/scram",
+			"Comment": "r2016.08.01-5-g3f83fa5",
+			"Rev": "3f83fa5005286a7fe593b055f0d7771a7dce4655"
 		}
 	]
 }

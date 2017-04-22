@@ -23,9 +23,7 @@ var config *nsq.Config
 var nsqAddress string
 
 func main() {
-	store = &simpleStore{
-		tweetStorage: make(map[string]tweet),
-	}
+	store = NewMongoStorage()
 
 	setupNSQ()
 
@@ -33,14 +31,9 @@ func main() {
 	r.StrictSlash(true)
 	r.HandleFunc("/api/tweet/{id}/", getTweet).Methods("GET")
 	r.Handle("/api/tweets/user/", mustAuth(&tweetHandler{})).Methods("GET")
-	r.HandleFunc("/api/tweets/", allTweets).Methods("GET")
 
 	http.Handle("/", r)
 	http.ListenAndServe(":8080", nil)
-}
-
-func allTweets(w http.ResponseWriter, r *http.Request) {
-	respondData(w, r, store.GetAllTweets())
 }
 
 func getTweet(w http.ResponseWriter, r *http.Request) {

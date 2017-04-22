@@ -24,8 +24,9 @@ services:
     image: twitterclone-tweet-query-service
     depends_on:
       - nsqd
+      - mongo
     environment: 
-      NSQ_ADDRESS: nsqd:4150  
+      NSQ_ADDRESS: nsqd:4150
   usercommand:
     image: twitterclone-user-command-service
     depends_on:
@@ -63,3 +64,9 @@ services:
     command: /nsqadmin --lookupd-http-address=nsqlookupd:4161
     ports:
       - "4171:4171"
+  mongo:
+    image: mongo
+    volumes:
+      - mongo-data:/data/db
+volumes:
+  mongo-data:
