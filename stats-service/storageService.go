@@ -1,6 +1,11 @@
 package main
 
-import "sync"
+import (
+	"sync"
+
+	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
+)
 
 type Storage interface {
 	CreateNewEntry(id string)
@@ -17,57 +22,101 @@ type simpleStore struct {
 	statStore map[string]*stats
 }
 
-func (store *simpleStore) CreateNewEntry(id string) {
-	store.Lock()
-	defer store.Unlock()
-	store.statStore[id] = &stats{}
+type mongoStorage struct {
+	session *mgo.Session
 }
 
-func (store *simpleStore) GetStatsByUserID(id string) stats {
-	store.Lock()
-	defer store.Unlock()
-	stats := store.statStore[id]
-	return *stats
-}
+func NewMongoStorage() *mongoStorage {
+	session, err := mgo.Dial("mongo")
+	if err != nil {
 
-func (store *simpleStore) AddTweet(id string) {
-	store.Lock()
-	defer store.Unlock()
-	store.statStore[id].Tweets++
-}
-
-func (store *simpleStore) RemoveTweet(id string) {
-	store.Lock()
-	defer store.Unlock()
-	if store.statStore[id].Tweets > 0 {
-		store.statStore[id].Tweets--
 	}
+	return &mongoStorage{session}
 }
 
-func (store *simpleStore) UpdateFollowCount(id string) {
-	store.Lock()
-	defer store.Unlock()
-	store.statStore[id].Follow++
+func (store *mongoStorage) CreateNewEntry(id string) {
+	sessionCopy := store.session.Copy()
+	defer sessionCopy.Close()
+
+	entry := struct {
+		id   string `bson:"id"`
+		stat stats  `bson:"stats"`
+	}{id, stats{}}
+
+	sessionCopy.DB("gotwitterclone").C("stats").Insert(&entry)
 }
 
-func (store *simpleStore) UpdateFollowerCount(id string) {
-	store.Lock()
-	defer store.Unlock()
-	store.statStore[id].Follower++
+func (store *mongoStorage) GetStatsByUserID(id string) stats {
+	sessionCopy := store.session.Copy()
+	defer sessionCopy.Close()
+
+	entry := struct {
+		id   string `bson:"id"`
+		stat stats  `bson:"stats"`
+	}{}
+	sessionCopy.DB("gotwitterclone").C("stats").Find(bson.M{"id": id}).One(&entry)
+	return entry.stat
 }
 
-func (store *simpleStore) RemoveStats(id string) {
-	store.Lock()
-	defer store.Unlock()
-	delete(store.statStore, id)
+func (store *mongoStorage) AddTweet(id string) {
+	sessionCopy := store.session.Copy()
+	defer sessionCopy.Close()
+
+	entry := struct {
+		id   string `bson:"id"`
+		stat stats  `bson:"stats"`
+	}{}
+	sessionCopy.DB("gotwitterclone").C("stats").Find(bson.M{"id": id}).One(&entry)
+
+	entry.stat.Tweets++
+	sessionCopy.DB("gotwitterclone").C("stats").Update(bson.M{"id": id}, &entry)
 }
 
-func simpleStoreMockUp() *simpleStore {
-	store := &simpleStore{
-		statStore: make(map[string]*stats),
-	}
+func (store *mongoStorage) RemoveTweet(id string) {
+	sessionCopy := store.session.Copy()
+	defer sessionCopy.Close()
 
-	store.statStore["12345"] = &stats{}
+	entry := struct {
+		id   string `bson:"id"`
+		stat stats  `bson:"stats"`
+	}{}
+	sessionCopy.DB("gotwitterclone").C("stats").Find(bson.M{"id": id}).One(&entry)
 
-	return store
+	entry.stat.Tweets--
+	sessionCopy.DB("gotwitterclone").C("stats").Update(bson.M{"id": id}, &entry)
+}
+
+func (store *mongoStorage) UpdateFollowCount(id string) {
+	sessionCopy := store.session.Copy()
+	defer sessionCopy.Close()
+
+	entry := struct {
+		id   string `bson:"id"`
+		stat stats  `bson:"stats"`
+	}{}
+	sessionCopy.DB("gotwitterclone").C("stats").Find(bson.M{"id": id}).One(&entry)
+
+	entry.stat.Follow++
+	sessionCopy.DB("gotwitterclone").C("stats").Update(bson.M{"id": id}, &entry)
+}
+
+func (store *mongoStorage) UpdateFollowerCount(id string) {
+	sessionCopy := store.session.Copy()
+	defer sessionCopy.Close()
+
+	entry := struct {
+		id   string `bson:"id"`
+		stat stats  `bson:"stats"`
+	}{}
+	sessionCopy.DB("gotwitterclone").C("stats").Find(bson.M{"id": id}).One(&entry)
+
+	entry.stat.Follower++
+	sessionCopy.DB("gotwitterclone").C("stats").Update(bson.M{"id": id}, &entry)
+}
+
+func (store *mongoStorage) RemoveStats(id string) {
+	sessionCopy := store.session.Copy()
+	defer sessionCopy.Close()
+	sessionCopy.DB("gotwitterclone").C("stats").Remove(bson.M{"id": id})
+
 }

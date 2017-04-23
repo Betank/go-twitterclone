@@ -43,6 +43,7 @@ services:
     image: twitterclone-stats-service
     depends_on:
       - nsqd
+      - mongo      
     environment: 
       NSQ_ADDRESS: nsqd:4150
   authservice:

@@ -15,9 +15,9 @@ type user struct {
 }
 
 type stats struct {
-	Follow   int `json:"follow"`
-	Follower int `json:"follower"`
-	Tweets   int `json:"tweets"`
+	Follow   int `json:"follow" bson:"follow"`
+	Follower int `json:"follower" bson:"follower"`
+	Tweets   int `json:"tweets" bson:"tweets"`
 }
 
 var store Storage
@@ -26,7 +26,7 @@ var nsqAddress string
 var config *nsq.Config
 
 func main() {
-	store = simpleStoreMockUp()
+	store = NewMongoStorage()
 	setupNSQ()
 
 	router := mux.NewRouter()
