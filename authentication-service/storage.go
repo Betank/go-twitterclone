@@ -12,6 +12,7 @@ type User struct {
 type Storage interface {
 	AddUser(user User) error
 	GetUserByName(name string) (User, error)
+	RemoveUser(id string)
 }
 
 type simpleStorage struct {
@@ -42,4 +43,11 @@ func (store *simpleStorage) GetUserByName(name string) (User, error) {
 		}
 	}
 	return User{}, ErrUserNotFound
+}
+
+func (store *simpleStorage) RemoveUser(id string) {
+	store.Lock()
+	defer store.Unlock()
+
+	delete(store.userStore, id)
 }

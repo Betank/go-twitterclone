@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"os"
 
 	"io/ioutil"
 
@@ -11,6 +13,7 @@ import (
 	"github.com/SermoDigital/jose/jws"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	nsq "github.com/nsqio/go-nsq"
 )
 
 type tokenResponse struct {
@@ -18,8 +21,10 @@ type tokenResponse struct {
 }
 
 var storage Storage
+var producer *nsq.Producer
 
 func main() {
+	setupNSQProducer()
 	storage = &simpleStorage{
 		userStore: make(map[string]User),
 	}
@@ -30,6 +35,21 @@ func main() {
 
 	http.Handle("/", r)
 	http.ListenAndServe(":8080", nil)
+}
+
+func setupNSQProducer() {
+	nsqAddress := os.Getenv("NSQ_ADDRESS")
+	if nsqAddress == "" {
+		log.Fatal("nsq address not set")
+	}
+
+	config := nsq.NewConfig()
+
+	var err error
+	producer, err = nsq.NewProducer(nsqAddress, config)
+	if err != nil {
+		log.Fatal("error while creating producer")
+	}
 }
 
 func login(w http.ResponseWriter, r *http.Request) {
@@ -93,11 +113,35 @@ func register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.ID = uuid.New().String()
+
 	err = storage.AddUser(*user)
 	if err != nil {
 		w.WriteHeader(http.StatusConflict)
 		return
 	}
+
+	err = sendMessage(*user)
+	if err != nil {
+		storage.RemoveUser(user.ID)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+func sendMessage(user User) error {
+	entry := &struct {
+		User `json:"user"`
+	}{user}
+	event, err := json.Marshal(entry)
+	if err != nil {
+		return err
+	}
+
+	err = producer.Publish("new_user", event)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func generateJWT(user User) (string, error) {

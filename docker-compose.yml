@@ -47,7 +47,11 @@ services:
     environment: 
       NSQ_ADDRESS: nsqd:4150
   authservice:
-    image: twitterclone-authentication-service        
+    image: twitterclone-authentication-service
+    depends_on:
+      - nsqd    
+    environment: 
+      NSQ_ADDRESS: nsqd:4150  
   nsqlookupd:
     image: nsqio/nsq
     command: /nsqlookupd
@@ -67,6 +71,8 @@ services:
       - "4171:4171"
   mongo:
     image: mongo
+    ports:
+      - "27017:27017"    
     volumes:
       - mongo-data:/data/db
 volumes:

@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/SermoDigital/jose/jws"
 	"github.com/gorilla/mux"
 	nsq "github.com/nsqio/go-nsq"
 )
@@ -20,8 +22,14 @@ type stats struct {
 	Tweets   int `json:"tweets" bson:"tweets"`
 }
 
+type tokenHandler struct {
+	next http.Handler
+}
+
+type statsHandler struct{}
+
 var store Storage
-var createTweetConsumer, deleteTweetConsumer *nsq.Consumer
+var createTweetConsumer, deleteTweetConsumer, newUserConsumer *nsq.Consumer
 var nsqAddress string
 var config *nsq.Config
 
@@ -31,19 +39,34 @@ func main() {
 
 	router := mux.NewRouter()
 	router.StrictSlash(true)
-	router.HandleFunc("/api/stats/", statsForCurrentUser).Methods("GET")
+	router.Handle("/api/stats/", needsToken(&statsHandler{})).Methods("GET")
 	router.HandleFunc("/api/stats/{userId}", statsForUser).Methods("GET")
 
 	http.Handle("/", router)
 	http.ListenAndServe(":8080", nil)
 }
 
-func statsForCurrentUser(w http.ResponseWriter, r *http.Request) {
-	respondData(w, r, store.GetStatsByUserID("12345"))
+func (handler *statsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	respondData(w, r, store.GetStatsByUserID(r.Context().Value("userID").(string)))
 }
 
 func statsForUser(w http.ResponseWriter, r *http.Request) {
 	respondData(w, r, store.GetStatsByUserID("12345"))
+}
+
+func (auth *tokenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	jwt, err := jws.ParseJWTFromRequest(r)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	ctx := context.WithValue(r.Context(), "userID", jwt.Claims().Get("userID"))
+
+	auth.next.ServeHTTP(w, r.WithContext(ctx))
+}
+
+func needsToken(handler http.Handler) http.Handler {
+	return &tokenHandler{handler}
 }
 
 func respondData(w http.ResponseWriter, r *http.Request, data interface{}) error {
@@ -60,6 +83,7 @@ func setupNSQ() {
 
 	createTweetConsumer = setupNSQConsumerHandler("create_tweet", updateTweetCount)
 	deleteTweetConsumer = setupNSQConsumerHandler("delete_tweet", reduceTweetCount)
+	newUserConsumer = setupNSQConsumerHandler("new_user", newUser)
 }
 
 func setupNSQConsumerHandler(topic string, handler func(message *nsq.Message) error) *nsq.Consumer {
@@ -94,6 +118,16 @@ func reduceTweetCount(message *nsq.Message) error {
 		return err
 	}
 	store.RemoveTweet(user.ID)
+	return nil
+}
+
+func newUser(message *nsq.Message) error {
+	user, err := getUserFromMessage(message)
+	if err != nil {
+		log.Println("error while recieving message ", err.Error())
+		return err
+	}
+	store.CreateNewEntry(user.ID)
 	return nil
 }
 

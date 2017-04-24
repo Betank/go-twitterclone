@@ -39,8 +39,8 @@ func (store *mongoStorage) CreateNewEntry(id string) {
 	defer sessionCopy.Close()
 
 	entry := struct {
-		id   string `bson:"id"`
-		stat stats  `bson:"stats"`
+		Id   string `bson:"id"`
+		Stat stats  `bson:"stats"`
 	}{id, stats{}}
 
 	sessionCopy.DB("gotwitterclone").C("stats").Insert(&entry)
@@ -51,11 +51,11 @@ func (store *mongoStorage) GetStatsByUserID(id string) stats {
 	defer sessionCopy.Close()
 
 	entry := struct {
-		id   string `bson:"id"`
-		stat stats  `bson:"stats"`
+		Id   string `bson:"id"`
+		Stat stats  `bson:"stats"`
 	}{}
 	sessionCopy.DB("gotwitterclone").C("stats").Find(bson.M{"id": id}).One(&entry)
-	return entry.stat
+	return entry.Stat
 }
 
 func (store *mongoStorage) AddTweet(id string) {
@@ -63,12 +63,12 @@ func (store *mongoStorage) AddTweet(id string) {
 	defer sessionCopy.Close()
 
 	entry := struct {
-		id   string `bson:"id"`
-		stat stats  `bson:"stats"`
+		Id   string `bson:"id"`
+		Stat stats  `bson:"stats"`
 	}{}
 	sessionCopy.DB("gotwitterclone").C("stats").Find(bson.M{"id": id}).One(&entry)
 
-	entry.stat.Tweets++
+	entry.Stat.Tweets++
 	sessionCopy.DB("gotwitterclone").C("stats").Update(bson.M{"id": id}, &entry)
 }
 
@@ -77,12 +77,12 @@ func (store *mongoStorage) RemoveTweet(id string) {
 	defer sessionCopy.Close()
 
 	entry := struct {
-		id   string `bson:"id"`
-		stat stats  `bson:"stats"`
+		Id   string `bson:"id"`
+		Stat stats  `bson:"stats"`
 	}{}
 	sessionCopy.DB("gotwitterclone").C("stats").Find(bson.M{"id": id}).One(&entry)
 
-	entry.stat.Tweets--
+	entry.Stat.Tweets--
 	sessionCopy.DB("gotwitterclone").C("stats").Update(bson.M{"id": id}, &entry)
 }
 
@@ -91,12 +91,12 @@ func (store *mongoStorage) UpdateFollowCount(id string) {
 	defer sessionCopy.Close()
 
 	entry := struct {
-		id   string `bson:"id"`
-		stat stats  `bson:"stats"`
+		Id   string `bson:"id"`
+		Stat stats  `bson:"stats"`
 	}{}
 	sessionCopy.DB("gotwitterclone").C("stats").Find(bson.M{"id": id}).One(&entry)
 
-	entry.stat.Follow++
+	entry.Stat.Follow++
 	sessionCopy.DB("gotwitterclone").C("stats").Update(bson.M{"id": id}, &entry)
 }
 
@@ -105,12 +105,12 @@ func (store *mongoStorage) UpdateFollowerCount(id string) {
 	defer sessionCopy.Close()
 
 	entry := struct {
-		id   string `bson:"id"`
-		stat stats  `bson:"stats"`
+		Id   string `bson:"id"`
+		Stat stats  `bson:"stats"`
 	}{}
 	sessionCopy.DB("gotwitterclone").C("stats").Find(bson.M{"id": id}).One(&entry)
 
-	entry.stat.Follower++
+	entry.Stat.Follower++
 	sessionCopy.DB("gotwitterclone").C("stats").Update(bson.M{"id": id}, &entry)
 }
 
