@@ -1,12 +1,16 @@
 package main
 
-import "sync"
-import "errors"
+import (
+	"errors"
+
+	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
+)
 
 type User struct {
-	Name     string `json:"username"`
-	ID       string `json:"id"`
-	Password string `json:"password"`
+	Name     string `json:"username" bson:"username"`
+	ID       string `json:"id" bson:"id"`
+	Password string `json:"password" bson:"password"`
 }
 
 type Storage interface {
@@ -15,39 +19,43 @@ type Storage interface {
 	RemoveUser(id string)
 }
 
-type simpleStorage struct {
-	sync.Mutex
-	userStore map[string]User
+type mongoStorage struct {
+	session *mgo.Session
 }
 
 var ErrUserNotFound = errors.New("User not found")
 var ErrUserAlreadyExists = errors.New("User already exists")
 
-func (store *simpleStorage) AddUser(user User) error {
-	store.Lock()
-	defer store.Unlock()
-	if _, contains := store.userStore[user.Name]; !contains {
-		store.userStore[user.Name] = user
-		return nil
+func NewMongoStorage() *mongoStorage {
+	session, err := mgo.Dial("mongo")
+	if err != nil {
+
 	}
-	return ErrUserAlreadyExists
+	return &mongoStorage{session}
 }
 
-func (store *simpleStorage) GetUserByName(name string) (User, error) {
-	store.Lock()
-	defer store.Unlock()
+func (store *mongoStorage) AddUser(user User) error {
+	sessionCopy := store.session.Copy()
+	defer sessionCopy.Close()
 
-	for _, v := range store.userStore {
-		if v.Name == name {
-			return v, nil
-		}
-	}
-	return User{}, ErrUserNotFound
+	return sessionCopy.DB("gotwitterclone").C("user").Insert(&user)
 }
 
-func (store *simpleStorage) RemoveUser(id string) {
-	store.Lock()
-	defer store.Unlock()
+func (store *mongoStorage) GetUserByName(name string) (User, error) {
+	sessionCopy := store.session.Copy()
+	defer sessionCopy.Close()
 
-	delete(store.userStore, id)
+	var user User
+	err := sessionCopy.DB("gotwitterclone").C("user").Find(bson.M{"username": name}).One(&user)
+	if err != nil {
+		return user, err
+	}
+	return user, nil
+}
+
+func (store *mongoStorage) RemoveUser(id string) {
+	sessionCopy := store.session.Copy()
+	defer sessionCopy.Close()
+
+	sessionCopy.DB("gotwitterclone").C("user").Remove(bson.M{"id": id})
 }

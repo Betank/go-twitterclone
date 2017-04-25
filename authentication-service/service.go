@@ -25,9 +25,7 @@ var producer *nsq.Producer
 
 func main() {
 	setupNSQProducer()
-	storage = &simpleStorage{
-		userStore: make(map[string]User),
-	}
+	storage = NewMongoStorage()
 
 	r := mux.NewRouter()
 	r.HandleFunc("/api/login/", login)

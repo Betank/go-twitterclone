@@ -49,7 +49,8 @@ services:
   authservice:
     image: twitterclone-authentication-service
     depends_on:
-      - nsqd    
+      - nsqd   
+      - mongo 
     environment: 
       NSQ_ADDRESS: nsqd:4150  
   nsqlookupd:
