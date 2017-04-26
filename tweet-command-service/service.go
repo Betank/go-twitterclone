@@ -66,7 +66,12 @@ func (handler *tweetCreateHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	w.Write([]byte(id))
+	response := struct {
+		ID string `json:"id"`
+	}{id}
+	if err = json.NewEncoder(w).Encode(response); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
 
 func (handler *tweetDeleteHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {

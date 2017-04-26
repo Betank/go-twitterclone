@@ -1,0 +1,27 @@
+{
+	"ImportPath": "github.com/betank/go-twitterclone/e2etests",
+	"GoVersion": "go1.8",
+	"GodepVersion": "v79",
+	"Deps": [
+		{
+			"ImportPath": "github.com/SermoDigital/jose",
+			"Comment": "1.1-1-g2bd9b81",
+			"Rev": "2bd9b81ac51d6d6134fcd4fd846bd2e7347a15f9"
+		},
+		{
+			"ImportPath": "github.com/SermoDigital/jose/crypto",
+			"Comment": "1.1-1-g2bd9b81",
+			"Rev": "2bd9b81ac51d6d6134fcd4fd846bd2e7347a15f9"
+		},
+		{
+			"ImportPath": "github.com/SermoDigital/jose/jws",
+			"Comment": "1.1-1-g2bd9b81",
+			"Rev": "2bd9b81ac51d6d6134fcd4fd846bd2e7347a15f9"
+		},
+		{
+			"ImportPath": "github.com/SermoDigital/jose/jwt",
+			"Comment": "1.1-1-g2bd9b81",
+			"Rev": "2bd9b81ac51d6d6134fcd4fd846bd2e7347a15f9"
+		}
+	]
+}

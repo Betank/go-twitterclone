@@ -38,7 +38,12 @@ func main() {
 
 func getTweet(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	respondData(w, r, store.GetTweetById(vars["id"]))
+	tweet, err := store.GetTweetById(vars["id"])
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	respondData(w, r, tweet)
 }
 
 func (handler *tweetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
