@@ -79,6 +79,26 @@ func awaitTweet(user user, tweetID string) (tweet, error) {
 	return *tweetResponseBody, nil
 }
 
+func getTweetsForUser(user user) ([]tweet, error) {
+	tweets := make([]tweet, 0)
+	tweetsRequest, err := createNewAuthHeaderRequest(user,
+		"GET",
+		gatewayURL+"/api/tweets/user/",
+		nil)
+	if err != nil {
+		return tweets, err
+	}
+	resp, err := http.DefaultClient.Do(tweetsRequest)
+	if err != nil {
+		return tweets, err
+	}
+	err = json.NewDecoder(resp.Body).Decode(&tweets)
+	if err != nil {
+		return tweets, err
+	}
+	return tweets, nil
+}
+
 func createNewAuthHeaderRequest(user user, method, url string, body io.Reader) (*http.Request, error) {
 	var request *http.Request
 	jwt, err := createJWTForUser(user)

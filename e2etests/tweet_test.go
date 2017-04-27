@@ -30,6 +30,36 @@ func TestShouldCreateTweet(t *testing.T) {
 	}, t)
 }
 
+func TestGetTweetsForCurrentUser(t *testing.T) {
+	user := user{ID: "0078142e-a2cd-4755-8167-da5cf856294a", Name: "user2"}
+
+	id, err := createTweet(user, "hello tweet")
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = awaitTweet(user, id)
+	if err != nil {
+		t.Error(err)
+	}
+	id2, err := createTweet(user, "hello tweet2")
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = awaitTweet(user, id2)
+	if err != nil {
+		t.Error(err)
+	}
+
+	tweets, err := getTweetsForUser(user)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if len(tweets) != 2 {
+		t.Error("Should have %d tweets, but has %d tweets", 2, len(tweets))
+	}
+}
+
 func assertTweetEqual(gotTweet, wantTweet tweet, t *testing.T) {
 	if gotTweet != wantTweet {
 		t.Errorf("tweets are not equal: got %v want %v", gotTweet, wantTweet)
