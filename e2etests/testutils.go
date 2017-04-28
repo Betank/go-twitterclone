@@ -23,6 +23,22 @@ func setGatewayURL() {
 	}
 }
 
+func createMultipleTweetsAndAwait(user user, text ...string) ([]tweet, error) {
+	tweets := make([]tweet, 0)
+	for _, content := range text {
+		id, err := createTweet(user, content)
+		if err != nil {
+			return tweets, err
+		}
+		tweet, err := awaitTweet(user, id)
+		if err != nil {
+			return tweets, err
+		}
+		tweets = append(tweets, tweet)
+	}
+	return tweets, nil
+}
+
 func createTweet(user user, text string) (string, error) {
 	reqBody := []byte(text)
 	req, err := createNewAuthHeaderRequest(user, "POST", gatewayURL+"/api/tweet/", bytes.NewReader(reqBody))
