@@ -3,13 +3,18 @@ package e2etests
 import (
 	"os"
 	"testing"
+
+	"github.com/google/uuid"
 )
 
 var testUser = user{ID: "6c9ce302-8de9-44fd-8161-05dc06925ad6", Name: "user"}
 
 func TestMain(m *testing.M) {
 	setGatewayURL()
-	os.Exit(m.Run())
+	setMongoDbAddr()
+	code := m.Run()
+	dropDB()
+	os.Exit(code)
 }
 
 func TestShouldCreateTweet(t *testing.T) {
@@ -31,7 +36,7 @@ func TestShouldCreateTweet(t *testing.T) {
 }
 
 func TestGetTweetsForCurrentUser(t *testing.T) {
-	user := user{ID: "0078142e-a2cd-4755-8167-da5cf856294a", Name: "user2"}
+	user := user{ID: uuid.New().String(), Name: "user2"}
 
 	tweets, err := createMultipleTweetsAndAwait(user, "test1", "test2")
 	if err != nil {
@@ -44,6 +49,28 @@ func TestGetTweetsForCurrentUser(t *testing.T) {
 	}
 
 	assertTweetsEqual(userTweets, tweets, t)
+}
+
+func TestDeleteTweet(t *testing.T) {
+	tweetID, err := createTweet(testUser, "delete tweet")
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = awaitTweet(testUser, tweetID)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = deleteTweet(testUser, tweetID)
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = awaitTweetDeleted(testUser, tweetID)
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func assertTweetEqual(gotTweet, wantTweet tweet, t *testing.T) {

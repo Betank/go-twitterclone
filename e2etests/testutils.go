@@ -5,21 +5,45 @@ import (
 	"encoding/json"
 	"net/http"
 
+	mgo "gopkg.in/mgo.v2"
+
 	"time"
 
 	"io"
 
 	"os"
 
+	"fmt"
+
 	"github.com/SermoDigital/jose/jws"
 )
 
 var gatewayURL = "http://localhost"
+var mongoDbAddr = "localhost:27017"
 
 func setGatewayURL() {
 	url := os.Getenv("GATEWAY_URL")
 	if url != "" {
 		gatewayURL = url
+	}
+}
+
+func setMongoDbAddr() {
+	address := os.Getenv("MONGO_ADDRESS")
+	if address != "" {
+		mongoDbAddr = address
+	}
+}
+
+func dropDB() {
+	session, err := mgo.Dial(mongoDbAddr)
+	if err != nil {
+		fmt.Printf("unable to drop database because of %s\n", err)
+		return
+	}
+	err = session.DB("gotwitterclone").DropDatabase()
+	if err != nil {
+		fmt.Printf("unable to drop database because of %s\n", err)
 	}
 }
 
@@ -113,6 +137,43 @@ func getTweetsForUser(user user) ([]tweet, error) {
 		return tweets, err
 	}
 	return tweets, nil
+}
+
+func deleteTweet(user user, tweetID string) error {
+	deleteTweetRequest, err := createNewAuthHeaderRequest(user,
+		"DELETE",
+		gatewayURL+"/api/tweet/"+tweetID+"/",
+		nil)
+	if err != nil {
+		return err
+	}
+	resp, err := http.DefaultClient.Do(deleteTweetRequest)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("request failed with status: %d", resp.StatusCode)
+	}
+	return nil
+}
+
+func awaitTweetDeleted(user user, tweetID string) error {
+	tweetRequest, err := createNewAuthHeaderRequest(user,
+		"GET",
+		gatewayURL+"/api/tweet/"+tweetID+"/",
+		nil)
+	if err != nil {
+		return err
+	}
+
+	resp := doRequestUntilSuccess(tweetRequest, http.StatusNotFound, 200)
+
+	if resp.StatusCode != 404 {
+		return fmt.Errorf("wrong status %d", resp.StatusCode)
+	}
+
+	return nil
 }
 
 func createNewAuthHeaderRequest(user user, method, url string, body io.Reader) (*http.Request, error) {
