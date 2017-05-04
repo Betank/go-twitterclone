@@ -35,10 +35,24 @@ func NewMongoStorage() *mongoStorage {
 }
 
 func (store *mongoStorage) AddUser(user User) error {
+	err := store.checkUserAlreadyExists(user.Name)
+	if err != nil {
+		return err
+	}
+
 	sessionCopy := store.session.Copy()
 	defer sessionCopy.Close()
 
 	return sessionCopy.DB("gotwitterclone").C("user").Insert(&user)
+}
+
+func (store *mongoStorage) checkUserAlreadyExists(name string) error {
+	user, _ := store.GetUserByName(name)
+	if user.ID != "" {
+		return errors.New("user already exist")
+	}
+
+	return nil
 }
 
 func (store *mongoStorage) GetUserByName(name string) (User, error) {

@@ -10,6 +10,7 @@ import (
 var testUser = user{ID: "6c9ce302-8de9-44fd-8161-05dc06925ad6", Name: "user"}
 
 func TestMain(m *testing.M) {
+	dropDB()
 	setGatewayURL()
 	setMongoDbAddr()
 	code := m.Run()

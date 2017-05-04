@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"net/url"
 
 	mgo "gopkg.in/mgo.v2"
 
@@ -15,11 +16,16 @@ import (
 
 	"fmt"
 
+	"errors"
+
 	"github.com/SermoDigital/jose/jws"
 )
 
 var gatewayURL = "http://localhost"
 var mongoDbAddr = "localhost:27017"
+
+var loginFailedError = errors.New("Login failed")
+var userConflictError = errors.New("User already exists")
 
 func setGatewayURL() {
 	url := os.Getenv("GATEWAY_URL")
@@ -212,4 +218,54 @@ func doRequestUntilSuccess(r *http.Request, wantStatus int, repeats int) *http.R
 	}()
 
 	return <-stop
+}
+
+func registerNewUser(name, password string) error {
+	user := struct {
+		Name     string `json:"username"`
+		Password string `json:"password"`
+	}{name, password}
+
+	body, err := json.Marshal(&user)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.Post(gatewayURL+"/api/register/", "application/json", bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode == 409 {
+		return userConflictError
+	}
+
+	if resp.StatusCode != 200 {
+		return errors.New("error while creating user")
+	}
+	return nil
+}
+
+func userLogin(name, password string) (string, error) {
+	resp, err := http.PostForm(gatewayURL+"/api/login/", url.Values{"username": {name}, "password": {password}})
+	if err != nil {
+		return "", err
+	}
+
+	if resp.StatusCode == 401 {
+		return "", loginFailedError
+	}
+
+	if resp.StatusCode != 200 {
+		return "", errors.New("error while creating user")
+	}
+
+	jwt := &struct {
+		Token string `json:"token"`
+	}{}
+	err = json.NewDecoder(resp.Body).Decode(jwt)
+	if err != nil {
+		return "", nil
+	}
+	return jwt.Token, nil
 }
