@@ -182,6 +182,35 @@ func awaitTweetDeleted(user user, tweetID string) error {
 	return nil
 }
 
+func awaitStats(username, password string) (stats, error) {
+	token, err := userLogin(username, password)
+	if err != nil {
+		return stats{}, err
+	}
+
+	statsRequest, err := http.NewRequest(
+		"GET",
+		gatewayURL+"/api/stats/",
+		nil)
+	if err != nil {
+		return stats{}, err
+	}
+
+	statsRequest.Header.Set("Authorization", "bearer "+token)
+
+	resp := doRequestUntilSuccess(statsRequest, http.StatusOK, 200)
+	if resp.StatusCode != 200 {
+		return stats{}, fmt.Errorf("wrong status %d", resp.StatusCode)
+	}
+
+	statsBody := stats{}
+	err = json.NewDecoder(resp.Body).Decode(&statsBody)
+	if err != nil {
+		return stats{}, err
+	}
+	return statsBody, nil
+}
+
 func createNewAuthHeaderRequest(user user, method, url string, body io.Reader) (*http.Request, error) {
 	var request *http.Request
 	jwt, err := createJWTForUser(user)
