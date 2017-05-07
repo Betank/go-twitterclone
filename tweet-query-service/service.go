@@ -1,21 +1,13 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 	"os"
 
-	"github.com/SermoDigital/jose/jws"
-	"github.com/gorilla/mux"
 	nsq "github.com/nsqio/go-nsq"
 )
-
-type authHandler struct {
-	next http.Handler
-}
-type tweetHandler struct{}
 
 var store Storage
 var createTweetConsumer, deleteTweetConsumer *nsq.Consumer
@@ -27,47 +19,8 @@ func main() {
 
 	setupNSQ()
 
-	r := mux.NewRouter()
-	r.StrictSlash(true)
-	r.HandleFunc("/api/tweet/{id}/", getTweet).Methods("GET")
-	r.Handle("/api/tweets/user/", mustAuth(&tweetHandler{})).Methods("GET")
-
-	http.Handle("/", r)
+	http.Handle("/", Router())
 	http.ListenAndServe(":8080", nil)
-}
-
-func getTweet(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	tweet, err := store.GetTweetById(vars["id"])
-	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-	respondData(w, r, tweet)
-}
-
-func (handler *tweetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	tweets := store.GetTweetsByUserId(r.Context().Value("userID").(string))
-	respondData(w, r, tweets)
-}
-
-func (auth *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	jwt, err := jws.ParseJWTFromRequest(r)
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-	ctx := context.WithValue(r.Context(), "userID", jwt.Claims().Get("userID"))
-
-	auth.next.ServeHTTP(w, r.WithContext(ctx))
-}
-
-func respondData(w http.ResponseWriter, r *http.Request, data interface{}) error {
-	return json.NewEncoder(w).Encode(data)
-}
-
-func mustAuth(handler http.Handler) http.Handler {
-	return &authHandler{handler}
 }
 
 func setupNSQ() {
