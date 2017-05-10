@@ -12,7 +12,7 @@ type user struct {
 }
 
 type stats struct {
-	Follow   int `json:"follow" bson:"follow"`
-	Follower int `json:"follower" bson:"follower"`
-	Tweets   int `json:"tweets" bson:"tweets"`
+	Follow   int `json:"follow"`
+	Follower int `json:"follower"`
+	Tweets   int `json:"tweets"`
 }
